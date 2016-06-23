@@ -32,7 +32,7 @@ module Unix::Pkg
       when /el-4/
         @logger.debug("Package query not supported on rhel4")
         return false
-      when /cisco|fedora|centos|eos|el-/
+      when /cisco|fedora|centos|eos|el-|redhat/
         result = execute("rpm -q #{name}", opts) { |result| result }
       when /ubuntu|debian|cumulus|huaweios/
         result = execute("dpkg -s #{name}", opts) { |result| result }
@@ -46,7 +46,7 @@ module Unix::Pkg
       when /openbsd/
         result = execute("pkg_info #{name}", opts) { |result| result }
       else
-        raise "Package #{name} cannot be queried on #{self}"
+        raise "Package #{name} cannot be queried on #{self}: Unsupported platform #{self['platform']}"
     end
     result.exit_code == 0
   end
@@ -73,7 +73,7 @@ module Unix::Pkg
           name = "#{name}-#{version}"
         end
         execute("dnf -y #{cmdline_args} install #{name}", opts)
-      when /cisco|fedora|centos|eos|el-/
+      when /cisco|fedora|centos|eos|el-|redhat/
         if version
           name = "#{name}-#{version}"
         end
@@ -120,7 +120,7 @@ module Unix::Pkg
           retry
         end
       else
-        raise "Package #{name} cannot be installed on #{self}"
+        raise "Package #{name} cannot be installed on #{self}: Unsupported platform #{self['platform']}"
     end
   end
 
@@ -150,7 +150,7 @@ module Unix::Pkg
         @logger.debug("Package uninstallation not supported on rhel4")
       when /fedora-22/
         execute("dnf -y #{cmdline_args} remove #{name}", opts)
-      when /cisco|fedora|centos|eos|el-/
+      when /cisco|fedora|centos|eos|el-|redhat/
         execute("yum -y #{cmdline_args} remove #{name}", opts)
       when /ubuntu|debian|cumulus|huaweios/
         execute("apt-get purge #{cmdline_args} -y #{name}", opts)
@@ -161,7 +161,7 @@ module Unix::Pkg
       when /aix/
         execute("rpm #{cmdline_args} -e #{name}", opts)
       else
-        raise "Package #{name} cannot be installed on #{self}"
+        raise "Package #{name} cannot be installed on #{self}: Unsupported platform #{self['platform']}"
     end
   end
 
@@ -178,7 +178,7 @@ module Unix::Pkg
         @logger.debug("Package upgrade is not supported on rhel4")
       when /fedora-(2[2-9])/
         execute("dnf -y #{cmdline_args} update #{name}", opts)
-      when /cisco|fedora|centos|eos|el-/
+      when /cisco|fedora|centos|eos|el-|redhat/
         execute("yum -y #{cmdline_args} update #{name}", opts)
       when /ubuntu|debian|cumulus|huaweios/
         update_apt_if_needed
@@ -193,7 +193,7 @@ module Unix::Pkg
       when /solaris-10/
         execute("pkgutil -u -y #{cmdline_args} #{name}", opts)
       else
-        raise "Package #{name} cannot be upgraded on #{self}"
+        raise "Package #{name} cannot be upgraded on #{self}: Unsupported platform #{self['platform']}"
     end
   end
 
@@ -255,7 +255,7 @@ module Unix::Pkg
     case self['platform']
       when /el-4/
         @logger.debug("Package repo deploy is not supported on rhel4")
-      when /fedora|centos|eos|el-/
+      when /fedora|centos|eos|el-|redhat/
         deploy_yum_repo(path, name, version)
       when /ubuntu|debian|cumulus|huaweios/
         deploy_apt_repo(path, name, version)
@@ -263,7 +263,7 @@ module Unix::Pkg
         deploy_zyp_repo(path, name, version)
       else
         # solaris, windows
-        raise "Package repo cannot be deployed on #{self}; the platform is not supported"
+        raise "Package repo cannot be deployed on #{self}: Unsupported platform #{self['platform']}"
     end
   end
 
@@ -411,7 +411,7 @@ module Unix::Pkg
 
     variant, version, arch, codename = self['platform'].to_array
     case variant
-    when /^(fedora|el|centos|sles)$/
+    when /^(fedora|el|centos|sles|redhat)$/
       variant = ((variant == 'centos') ? 'el' : variant)
       release_file = "/repos/#{variant}/#{version}/#{puppet_collection}/#{arch}/puppet-agent-*.rpm"
       download_file = "puppet-agent-#{variant}-#{version}-#{arch}.tar.gz"
@@ -451,7 +451,7 @@ module Unix::Pkg
     when /^(fedora-(2[2-9]))$/
       execute("tar -zxvf #{onhost_copied_download} -C #{onhost_copy_base}")
       execute("dnf --nogpgcheck localinstall -y #{onhost_copied_file}")
-    when /^(fedora|el|centos)$/
+    when /^(fedora|el|centos|redhat)$/
       execute("tar -zxvf #{onhost_copied_download} -C #{onhost_copy_base}")
       execute("yum --nogpgcheck localinstall -y #{onhost_copied_file}")
     when /^(sles)$/
