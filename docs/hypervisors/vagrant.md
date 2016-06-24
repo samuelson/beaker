@@ -157,3 +157,28 @@ When using the Vagrant Hypervisor, beaker can create the Vagrantfile to forward 
             to_ip: '0.0.0.0'
 
 In the above, beaker will forward port 10080 and 8080 on the Host to port 80 and 8080 (respectively) on the Agent guest.
+
+### Setting Vagrant Memory and CPUs
+
+By default when using the Vagrant Hypervisor, memory will be set to 1024MB and CPUs to 1. These settings can be configured using `vagrant_memsize` and `vagrant_cpus`.
+
+**Example hosts file**
+
+    HOSTS:
+      ubuntu-1404-x64:
+        roles:
+          - master
+          - agent
+          - dashboard
+          - cloudpro
+        platform: ubuntu-1404-x86_64
+        hypervisor: vagrant
+        vagrant_memsize: 4096
+        vagrant_cpus: 4
+        box: puppetlabs/ubuntu-14.04-64-nocm
+        box_url: https://vagrantcloud.com/puppetlabs/boxes/ubuntu-14.04-64-nocm
+    CONFIG:
+      nfs_server: none
+      consoleport: 443
+
+In the above, beaker will set the memory of the host `ubuntu-1404-x64` to 4096MB and the CPU count to 4.
